@@ -1,0 +1,111 @@
+:root{
+  --orangeColor: #fcba03;
+  --borderRadius: 5px;
+  --blackColor: #111
+  --whiteColor: #fff
+}
+
+.main-header .logo {
+  font-family: cursive;
+  font-weight: bold;
+  font-size: 24px;
+}
+
+.verb_text_out{
+  width: 300px;
+  padding-left: 20px;
+}
+
+.mainPanel{
+  border: 1px black solid;
+  border-radius: var(--borderRadius);
+  padding: 20px;
+  margin: 15px 30px;
+}
+
+.box-header {
+    color: var(--orangeColor) !important;
+}
+
+.box{
+  box-shadow: none !important;
+  border: 1px black solid !important;
+  border-radius: var(--borderRadius);
+  text-align: center;
+  margin: auto;
+}
+
+#clear_button:hover, #reclass_col:hover, #rename_col:hover, #makenew_col:hover{
+  background-color: var(--orangeColor);
+}
+
+.btn-file:hover{
+  background-color: var(--orangeColor) !important;
+}
+
+#new_col_name, #newnew_col_name{
+ text-align: center;
+ color: black !important;
+}
+
+#makenew_col{
+  margin-top: 25px;
+}
+
+.center-select-6{
+  padding-left: 215px;
+}
+
+.center-select-3{
+  padding-left: 37px;
+}
+.center-radio-6-4{
+  padding-left: 140px;
+}
+
+.nav-tabs-custom{
+  box-shadow: none !important;
+}
+
+.progress-bar{
+  background-color: var(--orangeColor) !important;
+}
+
+pre{
+  border: 1px black solid !important ;
+  border-radius: var(--borderRadius) !important;
+  background-color: var(--whiteColor) !important;
+  overflow: hidden; 
+}
+
+.plot-border{
+  border: 1px black solid;
+  border-radius: var(--borderRadius);
+  padding-top: 20px;
+  overflow: hidden; 
+}
+
+.stat-border{
+  border: 1px black solid;
+  border-radius: var(--borderRadius);
+  padding-top: 20px;
+  overflow: hidden; 
+  width: 270px;
+}
+
+.nav-tabs-custom>.nav-tabs {
+  border-bottom: none !important;
+}
+
+.nav-tabs-custom>.nav-tabs>li {
+  border-top: none !important;
+}
+
+.nav-tabs-custom>.nav-tabs>li.active>a, .nav-tabs-custom>.nav-tabs>li.active:hover>a {
+  color: var(--orangeColor) !important;
+}
+
+.nav-tabs>li.active>a, .nav-tabs>li.active>a:hover, .nav-tabs>li.active>a:focus {
+  cursor: pointer !important;
+  border: none !important;
+}
