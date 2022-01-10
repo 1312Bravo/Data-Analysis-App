@@ -1,5 +1,6 @@
 :root{
   --orangeColor: #fcba03;
+  --orangeColorTwo: #FCD361
   --borderRadius: 5px;
   --blackColor: #111
   --whiteColor: #fff
@@ -13,12 +14,12 @@
 
 .verb_text_out{
   width: 300px;
-  padding-left: 20px;
+  padding-left: 1.25em;
 }
 
 .mainPanel{
   border: 1px black solid;
-  border-radius: var(--borderRadius);
+  border-radius: 3px;
   padding: 20px;
   margin: 15px 30px;
 }
@@ -35,15 +36,43 @@
   margin: auto;
 }
 
-#clear_button:hover, #reclass_col:hover, #rename_col:hover, #makenew_col:hover{
+#clear_button:hover, #reclass_col:hover, #rename_col:hover, #makenew_col:hover, #download_data:hover,
+#t_test_compute:hover, #normality_compute:hover {
   background-color: var(--orangeColor);
+}
+
+#normality_compute{
+  margin-bottom: 10px;
+}
+
+/*
+.btn-radio_class{
+  border: 1px black solid !important;
+  
+  background-color: var(--whiteColor);
+  color: var(--blackColor);
+}
+*/
+
+.btn-group>.btn:focus, .btn-group>.btn:active, .btn-group>.btn.active, .btn-group-vertical>.btn:hover, .btn-group-vertical>.btn:focus, .btn-group-vertical>.btn:active, .btn-group-vertical>.btn.active{
+  color: var(--blackColor) !important;
+  background-color: var(--whiteColor) !important;
+}
+
+.btn:active, .btn.active{
+  box-shadow: none !important;
+}
+
+.btn-group>.btn:hover{
+  color: var(--orangeColor);
+  background-color: var(--whiteColor) !important;
 }
 
 .btn-file:hover{
   background-color: var(--orangeColor) !important;
 }
 
-#new_col_name, #newnew_col_name{
+#new_col_name, #newnew_col_name, #t_test_mean{
  text-align: center;
  color: black !important;
 }
@@ -53,14 +82,51 @@
 }
 
 .center-select-6{
-  padding-left: 215px;
+  padding-left: 13.4375em;
+}
+
+/*
+.center-select-3{
+  padding-left: 2.3125em;
+}
+*/
+
+.center-select-2{
+  width: 45%; 
+  text-align:center; 
+  display: block;
+  margin: auto;
 }
 
 .center-select-3{
-  padding-left: 37px;
+  width: 50%; 
+  text-align:center; 
+  display: block;
+  margin: auto;
 }
+
+.center-select-4{
+  width: 60%; 
+  text-align:center; 
+  display: block;
+  margin: auto;
+}
+
+.center-select-5{
+  width: 90%; 
+  text-align:center; 
+  display: block;
+  margin: auto;
+}
+
+
 .center-radio-6-4{
-  padding-left: 140px;
+  /*padding-left: 8.75em;*/
+  width: 50%;
+  text-align:center; 
+  display: block;
+  margin: auto;
+  margin-bottom: 30px;
 }
 
 .nav-tabs-custom{
@@ -71,12 +137,14 @@
   background-color: var(--orangeColor) !important;
 }
 
+/*Render Print */
 pre{
   border: 1px black solid !important ;
-  border-radius: var(--borderRadius) !important;
+  border-radius: 3px !important;
   background-color: var(--whiteColor) !important;
   overflow: hidden; 
 }
+
 
 .plot-border{
   border: 1px black solid;
@@ -102,6 +170,14 @@ pre{
 }
 
 .nav-tabs-custom>.nav-tabs>li.active>a, .nav-tabs-custom>.nav-tabs>li.active:hover>a {
+  color: var(--orangeColor) !important;
+}
+
+.skin-blue .sidebar-menu .treeview-menu>li>a {
+  color: var(--whiteColor) !important;
+}
+
+.skin-blue .sidebar-menu .treeview-menu>li.active>a,  .skin-blue .sidebar-menu .treeview-menu>li.active:hover>a {
   color: var(--orangeColor) !important;
 }
 

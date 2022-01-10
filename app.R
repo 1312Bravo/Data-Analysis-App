@@ -3,7 +3,7 @@
 # https://mastering-shiny.org/index.html
 # https://www.rstudio.com/resources/cheatsheets/
 
-# https://www.statology.org/r-guides/
+# https://www.statology.org/r-guides/ !!!!!
 # http://r-statistics.co/Top50-Ggplot2-Visualizations-MasterList-R-Code.html
 # http://www.sthda.com/english/articles/32-r-graphics-essentials/131-plot-two-continuous-variables-scatter-graph-and-alternatives/
 
@@ -30,7 +30,7 @@ library(DataExplorer)
 source("fresh-themes.R")
 source("Analysis-Plot-Functions.R")
 source("Analysis-Statistics-Functions.R")
-pokemon <- read.csv("pokemon.csv")
+# pokemon <- read.csv("pokemon.csv")
 
 not_sel <- "Not Selected"
 
@@ -52,314 +52,506 @@ ui <- dashboardPage(title = "Data Analyser",
                         menuItem("Data Import", tabName = "data_import", icon = icon("upload")),
                         menuItem("Data Look", tabName = "data_look", icon = icon("book-reader")),
                         menuItem("Data Manipulation", tabName = "manipulation", icon = icon("wrench")),
-                        menuItem("Analysis", tabName = "analysis", icon = icon("address-card"))
+                        menuItem("Analysis", tabName = "analysis", icon = icon("address-card")),
+                        menuItem("Hypothesis Testing", tabName = "hypothesis", icon = icon("flask"),
+                                 menuSubItem("Normal distribution", tabName = "normality-test"),
+                                 menuSubItem("t-test", tabName = "t-test")),
+                        menuItem("Data Download", tabName = "data_download", icon = icon("download"))
                         
                       ) # sidebarMenu
                     ), # Side Bar
                     
                     dashboardBody(
-                                  # 3. CSS tags ----  
-                                  # Import CSS $& Themes
-                                  tags$head(tags$link(rel = "stylesheet", type = "text/css", href = "styles.css")),
-                                  use_theme(mytheme_2), use_theme(mytheme), useShinyjs(),
-                                  # Datatable Look
-                                  tags$style(HTML('table.dataTable tr.selected td, table.dataTable td.selected {background-color: #fcba03 !important;}')),
-                                  # Errors
-                                  tags$style(type="text/css",".shiny-output-error { visibility: hidden; }",".shiny-output-error:before { visibility: hidden; }"),
-                                  #tags$style(type='text/css', '#metadata, #summary {white-space: pre-wrap;}'),
-                                  # Notifications
-                                  tags$style(succNotifyTag("newcol_succ")), tags$style(errNotifyTag("newcol_err")),
-                                  tags$style(succNotifyTag("colname_succ")), tags$style(errNotifyTag("colname_err")),
-                                  tags$style(succNotifyTag("collclas_succ")), tags$style(errNotifyTag("collclas_err")),
+                      # 3. CSS tags ----  
+                      # Import CSS $& Themes
+                      tags$head(tags$link(rel = "stylesheet", type = "text/css", href = "styles.css")),
+                      use_theme(mytheme_2), use_theme(mytheme), useShinyjs(),
+                      # Datatable Look
+                      tags$style(HTML('table.dataTable tr.selected td, table.dataTable td.selected {background-color: #fcba03 !important;}')),
+                      # Errors
+                      tags$style(type="text/css",".shiny-output-error { visibility: hidden; }",".shiny-output-error:before { visibility: hidden; }"),
+                      #tags$style(type='text/css', '#metadata, #summary {white-space: pre-wrap;}'),
+                      # Notifications
+                      tags$style(succNotifyTag("newcol_succ")), tags$style(errNotifyTag("newcol_err")),
+                      tags$style(succNotifyTag("colname_succ")), tags$style(errNotifyTag("colname_err")),
+                      tags$style(succNotifyTag("collclas_succ")), tags$style(errNotifyTag("collclas_err")),
+                      # Icons
+                      tags$style(".fa-bolt {color:#fcba03}"),
+                      
+                      tabItems(
+                        
+                        ## 1.3 Data Import ----
+                        tabItem(tabName = "data_import",
+                                fluidRow(
                                   
-                                  tabItems(
-                                    
-                                    ## 1.3 Data Import ----
-                                    tabItem(tabName = "data_import",
-                                            fluidRow(
-                                              
-                                              ### 1.3.1 Import ----
-                                              box(width=4, title = "Inputs", solidHeader = TRUE,
-                                                  fileInput(inputId = "csv_input", 
-                                                            label = "Select CSV File to Import",
-                                                            accept = ".csv",
-                                                            buttonLabel = list(icon("searchengin"), "Browse..."),
-                                                            placeholder = "Data.csv")
-                                              ), # side bar
-                                              
-                                              tabBox(width=8, 
-                                                     
-                                                     ### 1.3.2 Data Introduce ---- 
-                                                     tabPanel(title = "Introduce", solidHeader = TRUE,
-                                                              conditionalPanel(condition = "output.csv_import_ready",
-                                                                               fluidRow(
-                                                                                 column(width = 4, verbatimTextOutput(outputId = "introduce")),
-                                                                                 column(width = 4, verbatimTextOutput(outputId = "missing")),
-                                                                                 column(width = 4, verbatimTextOutput(outputId = "class"))
-                                                                               ))),
-                                                     ### 1.3.3 Metadata ----
-                                                     tabPanel(title = 'Metadata', solidHeader = TRUE,
-                                                              conditionalPanel(condition = "output.csv_import_ready",
-                                                                               verbatimTextOutput(outputId = "metadata"))),
-                                                     ### 1.3.4 Summary ----
-                                                     tabPanel(title = 'Summary', solidHeader = TRUE,
-                                                              conditionalPanel(condition = "output.csv_import_ready",
-                                                              verbatimTextOutput(outputId = "summary")))
-                                                     
-                                              ) # main panel
-                                              
-                                            )
-                                    ), # Data import
-                                    
-                                    ## 1.6 Data Look ----
-                                    
-                                    tabItem(tabName = "data_look",
-                                            conditionalPanel(condition="output.csv_import_ready",
-                                                             fluidRow(div(class = 'mainPanel', dataTableOutput(outputId = "file_input_show"))))
-                                            ),
-                                    
-                                    ## 1.5 Data manipulation ----
-                                    
-                                    tabItem(tabName = "manipulation",
-                                            
-                                            fluidRow(
-                                              #### 1.5.1 Col Name Select ----
-                                              box(width = 3, title = "Change Column Name", solidHeader = TRUE,
-                                                  div(class = "center-select-3", 
-                                                      selectInput(inputId = "change_col_name",
-                                                              label = "Old Column Name",
-                                                              choices = c(not_sel),
-                                                              width = selectBarWidth)),
-                                                  div(class = "center-select-3", 
-                                                      textInput(inputId = 'new_col_name', 
-                                                            label = 'New Column Name',
-                                                            placeholder = not_sel,
-                                                            width = selectBarWidth)),
-                                                  actionButton(inputId = "rename_col",
-                                                               label = "Rename",
-                                                               width = buttonWidth)
-                                              ), 
-                                              
-                                              ### 1.5.3 New Column ----
-                                              box(width = 6, title = "Make New Column From Two Existing", solidHeader = TRUE,
-                                                  fluidRow(
-                                                    column(width = 6, div(class = "center-select-3",
-                                                           selectInput(inputId = "new_col_1",
-                                                                       label = "Column One",
-                                                                       choices = c(not_sel),
-                                                                       width = selectBarWidth))),
-                                                    column(width = 6, div(class = "center-select-3",
-                                                           selectInput(inputId = "new_col_2",
-                                                                       label = "Column Two",
-                                                                       choices = c(not_sel),
-                                                                       width = selectBarWidth)))
-                                                  ),
-                                                  div(class = "center-radio-6-4",
-                                                    radioGroupButtons(inputId = "new_col_operation",
-                                                                      label = "Choose an operation",
-                                                                      choices = c(`<i class="fas fa-plus"></i>` = "plus",
-                                                                                  `<i class="fas fa-minus"></i>` = "minus",
-                                                                                  `<i class="fas fa-times"></i>` = "times",
-                                                                                  `<i class="fas fa-divide"></i>` = "divide"),
-                                                                      justified = TRUE,
-                                                                      width = "350px"),
-                                                  ),
-                                                  fluidRow(
-                                                    column(width = 6, div(class = "center-select-3", 
-                                                                          textInput(inputId = 'newnew_col_name', 
-                                                                                    label = 'Column Name',
-                                                                                    placeholder = not_sel,
-                                                                                    width = selectBarWidth))),
-                                                    column(width = 6, div(class = "center-select-3",
-                                                                          actionButton(inputId = "makenew_col",
-                                                                                       label = "Compute",
-                                                                                       width = buttonWidth)))
-                                                  )),
-                                              
-                                              ### 1.5.3 Col ClassSelect -----
-                                              box(width = 3, title = "Change Column Class",
-                                                  div(class = "center-select-3", 
-                                                      selectInput(inputId = "change_col_class",
-                                                              label = "Column Name",
-                                                              choices = c(not_sel),
-                                                              width = selectBarWidth)),
-                                                  div(class = "center-select-3", 
-                                                      selectInput(inputId = "new_col_class",
-                                                              label = "New Column Class",
-                                                              choices = c("Not selected" = "ns", "Factor" = "factor", "Numeric" = "numeric", "Integer" = "integer", "Character" = "character"),
-                                                              width = selectBarWidth)),
-                                                  actionButton(inputId = "reclass_col",
-                                                               label = "Change class",
-                                                               width = buttonWidth)
-                                              )
-                                            )
-                                    ),
-                                    
-                                    ## 1.4 Analysis ----
-                                    tabItem(tabName = "analysis",
-                                            fluidRow(
-                                              
-                                              ### 1.4.1 Selectors ----
-                                              box(width = 3, title = 'Inputs',
-                                                  div(class = "center-select-3",
-                                                      selectInput(inputId = "num_var_1", 
-                                                              label = list("Numerical Variable ", icon("hand-pointer")),
-                                                              choices = c(not_sel),
-                                                              width = selectBarWidth)),
-                                                  div(class = "center-select-3", 
-                                                      selectInput(inputId = "num_var_2", 
-                                                              label = list("Numerical Variable ", icon("hand-peace")),
-                                                              choices = c(not_sel),
-                                                              width = selectBarWidth)),
-                                                  div(class = "center-select-3",
-                                                      selectInput(inputId = "fact_var", 
-                                                              label = list("Factor Variable ", icon("hand-spock")),
-                                                              choices = c(not_sel),
-                                                              width = selectBarWidth)),
-                                                  actionButton(inputId = 'clear_button', 
-                                                               label = 'Clear',
-                                                               icon = icon("snowplow"),
-                                                               width = buttonWidth)
+                                  ### 1.3.1 Import ----
+                                  box(width=4, title = "Import Handler", solidHeader = TRUE,
+                                      
+                                      radioGroupButtons(inputId = "input_type",
+                                                        label = "Type Of File",
+                                                        choices = c("csv", "xlsx", "txt"),
+                                                        individual = TRUE,
+                                                        #justified = TRUE,
+                                                        size = "normal",
+                                                        checkIcon = list(yes = icon('bolt'))),
+                                      
+                                      conditionalPanel(condition = "input.input_type == 'csv'",
+                                                       radioGroupButtons(inputId = "input_sep_csv",
+                                                                         label = "Separator & Decimal",
+                                                                         choices = c("Comma & Period" = ",", "Semicolon & Comma" = ";"),
+                                                                         individual = TRUE,
+                                                                         # justified = TRUE,
+                                                                         size = "normal",
+                                                                         checkIcon = list(yes = icon('bolt')))),
+                                      conditionalPanel(condition = "input.input_type == 'txt'",
+                                                       radioGroupButtons(inputId = "input_sep_txt",
+                                                                         label = "Separator",
+                                                                         choices = c("Comma" = ",", "Semicolon" = ";", "Pipe" = "|", "Tab" = "\t"),
+                                                                         individual = TRUE,
+                                                                         checkIcon = list(yes = icon('bolt')))),
+                                      
+                                      prettyCheckbox(inputId = 'input_header',
+                                                     label =  HTML('<b>Header ?</b>'),
+                                                     value = TRUE,
+                                                     icon = icon("thumbs-up"),
+                                                     plain = TRUE,
+                                                     outline = TRUE),
+                                      
+                                      fileInput(inputId = "csv_input", 
+                                                label = paste("Select File to Import"),
+                                                accept = c(".csv", ".xlsx", "text", "text-separated-values"),
+                                                buttonLabel = list(icon("searchengin"), "Browse..."),
+                                                placeholder = "Import File Name"),
+                                  ), # side bar
+                                  
+                                  tabBox(width=8, 
+                                         
+                                         ### 1.3.2 Data Introduce ---- 
+                                         tabPanel(title = "Introduction", solidHeader = TRUE,
+                                                  conditionalPanel(condition = "output.csv_import_ready",
+                                                                   fluidRow(
+                                                                     column(width = 4, verbatimTextOutput(outputId = "introduce")),
+                                                                     column(width = 4, verbatimTextOutput(outputId = "missing")),
+                                                                     column(width = 4, verbatimTextOutput(outputId = "class"))
+                                                                   ))),
+                                         ### 1.3.3 Metadata ----
+                                         tabPanel(title = 'Metadata', solidHeader = TRUE,
+                                                  conditionalPanel(condition = "output.csv_import_ready",
+                                                                   verbatimTextOutput(outputId = "metadata"))),
+                                         ### 1.3.4 Summary ----
+                                         tabPanel(title = 'Summary', solidHeader = TRUE,
+                                                  conditionalPanel(condition = "output.csv_import_ready",
+                                                                   verbatimTextOutput(outputId = "summary")))
+                                         
+                                  ) # main panel
+                                  
+                                )
+                        ), # Data import
+                        
+                        ## 1.6 Data Look ----
+                        
+                        tabItem(tabName = "data_look",
+                                conditionalPanel(condition="output.csv_import_ready",
+                                                 fluidRow(div(class = 'mainPanel', dataTableOutput(outputId = "file_input_show"))))
+                        ),
+                        
+                        ## 1.5 Data manipulation ----
+                        
+                        tabItem(tabName = "manipulation",
+                                
+                                fluidRow(
+                                  #### 1.5.1 Col Name Select ----
+                                  box(width = 3, title = "Change Column Name", solidHeader = TRUE,
+                                      div(class = "center-select-3", 
+                                          selectInput(inputId = "change_col_name",
+                                                      label = "Old Column Name",
+                                                      choices = c(not_sel),
+                                                      width = selectBarWidth)),
+                                      div(class = "center-select-3", 
+                                          textInput(inputId = 'new_col_name', 
+                                                    label = 'New Column Name',
+                                                    placeholder = not_sel,
+                                                    width = selectBarWidth)),
+                                      actionButton(inputId = "rename_col",
+                                                   label = "Rename",
+                                                   width = buttonWidth)
+                                  ), 
+                                  
+                                  ### 1.5.3 New Column ----
+                                  box(width = 6, title = "Make New Column From Two Existing", solidHeader = TRUE,
+                                      fluidRow(
+                                        column(width = 6, div(class = "center-select-3",
+                                                              selectInput(inputId = "new_col_1",
+                                                                          label = list("Column", icon("hand-pointer")),
+                                                                          choices = c(not_sel),
+                                                                          width = selectBarWidth))),
+                                        column(width = 6, div(class = "center-select-3",
+                                                              selectInput(inputId = "new_col_2",
+                                                                          label = list("Column", icon("hand-peace")),
+                                                                          choices = c(not_sel),
+                                                                          width = selectBarWidth)))
+                                      ),
+                                      div(class = "center-radio-6-4",
+                                          radioGroupButtons(inputId = "new_col_operation",
+                                                            label = "Choose an operation",
+                                                            choices = c(`<i class="fas fa-plus"></i>` = "plus",
+                                                                        `<i class="fas fa-minus"></i>` = "minus",
+                                                                        `<i class="fas fa-times"></i>` = "times",
+                                                                        `<i class="fas fa-divide"></i>` = "divide"),
+                                                            justified = TRUE,
+                                                            width = "100%",
+                                                            checkIcon = list(yes = icon('bolt'))),
+                                      ),
+                                      fluidRow(
+                                        column(width = 6, div(class = "center-select-3", 
+                                                              textInput(inputId = 'newnew_col_name', 
+                                                                        label = 'Column Name',
+                                                                        placeholder = not_sel,
+                                                                        width = selectBarWidth))),
+                                        column(width = 6, div(class = "center-select-3",
+                                                              actionButton(inputId = "makenew_col",
+                                                                           label = "Compute",
+                                                                           width = buttonWidth)))
+                                      )),
+                                  
+                                  ### 1.5.3 Col ClassSelect -----
+                                  box(width = 3, title = "Change Column Class",
+                                      div(class = "center-select-3", 
+                                          selectInput(inputId = "change_col_class",
+                                                      label = "Column Name",
+                                                      choices = c(not_sel),
+                                                      width = selectBarWidth)),
+                                      div(class = "center-select-3", 
+                                          selectInput(inputId = "new_col_class",
+                                                      label = "New Column Class",
+                                                      choices = c("Not selected" = "ns", "Factor" = "factor", "Numeric" = "numeric", "Integer" = "integer", "Character" = "character"),
+                                                      width = selectBarWidth)),
+                                      actionButton(inputId = "reclass_col",
+                                                   label = "Change class",
+                                                   width = buttonWidth)
+                                  )
+                                )
+                        ),
+                        
+                        ## 1.4 Analysis ----
+                        tabItem(tabName = "analysis",
+                                fluidRow(
+                                  
+                                  ### 1.4.1 Selectors ----
+                                  box(width = 3, title = 'Inputs',
+                                      div(class = "center-select-4",
+                                          selectInput(inputId = "num_var_1", 
+                                                      label = list("Numerical Variable ", icon("hand-pointer")),
+                                                      choices = c(not_sel),
+                                                      width = selectBarWidth)),
+                                      div(class = "center-select-4", 
+                                          selectInput(inputId = "num_var_2", 
+                                                      label = list("Numerical Variable ", icon("hand-peace")),
+                                                      choices = c(not_sel),
+                                                      width = selectBarWidth)),
+                                      div(class = "center-select-4",
+                                          selectInput(inputId = "fact_var", 
+                                                      label = list("Factor Variable ", icon("hand-spock")),
+                                                      choices = c(not_sel),
+                                                      width = selectBarWidth)),
+                                      actionButton(inputId = 'clear_button', 
+                                                   label = 'Clear',
+                                                   icon = icon("snowplow"),
+                                                   width = buttonWidth)
+                                      
+                                  ), # inputs
+                                  
+                                  tabBox(width = 9,
+                                         
+                                         
+                                         ### 1.4.2 Plots ----
+                                         tabPanel(title = "Plot", 
                                                   
-                                              ), # inputs
-                                              
-                                              tabBox(width = 9,
-                                                     
-                                                     
-                                                     ### 1.4.2 Plots ----
-                                                     tabPanel(title = "Plot", 
-                                                              
-                                                              #### 1.4.2.1 One Numeric ----
-                                                              conditionalPanel(condition = num_var_one, 
-                                                                               radioGroupButtons(inputId = "num_var_one",
-                                                                                                 label = "Choose a graph",
-                                                                                                 choices = c(`<i class="fas fa-signal"></i>` = "histogram",
-                                                                                                             `<i class="fas fa-chart-area"></i>` = "density",
-                                                                                                             `<i class="fas fa-box-open"></i>` = "box"),
-                                                                                                 justified = TRUE,
-                                                                                                 width = radioButtonWidth),
-                                                                               conditionalPanel(condition = "input.num_var_one == 'histogram'",
-                                                                                                div(class = "plot-border", plotOutput(outputId = "num_var_one_hist"))),
-                                                                               conditionalPanel(condition = "input.num_var_one == 'density'",
-                                                                                                div(class = "plot-border", plotOutput(outputId = "num_var_one_density"))),
-                                                                               conditionalPanel(condition = "input.num_var_one == 'box'",
-                                                                                                div(class = "plot-border", plotOutput(outputId = "num_var_one_box"))),
-                                                                               
-                                                              ), # One Numeric
-                                                              #### 1.4.2.2 Two Numeric ----
-                                                              conditionalPanel(condition = num_var_1_num_var_2,
-                                                                               radioGroupButtons(inputId = "num_var_two",
-                                                                                                 label = "Choose a graph",
-                                                                                                 choices = c(`<i class="fas fa-braille"></i>` = "scatter",
-                                                                                                             `<i class="fas fa-braille"></i><span>  </span><i class="fas fa-chart-area"></i>` = "density",
-                                                                                                             `<i class="fas fa-braille"></i><span>  </span><i class="fas fa-box-open"></i>` = "box"),
-                                                                                                 justified = TRUE,
-                                                                                                 width = radioButtonWidth),
-                                                                               conditionalPanel(condition = "input.num_var_two == 'scatter'",
-                                                                                                div(class = "plot-border", plotOutput(outputId = "num_var_two_scatter"))),
-                                                                               conditionalPanel(condition = "input.num_var_two == 'density'",
-                                                                                                div(class = "plot-border", plotOutput(outputId = "num_var_two_density"))),
-                                                                               conditionalPanel(condition = "input.num_var_two == 'box'",
-                                                                                                div(class = "plot-border", plotOutput(outputId = "num_var_two_box"))),
-                                                              ), # Two numeric
-                                                              
-                                                              #### 1.4.2.3 Numeric & Factor ----
-                                                              conditionalPanel(condition = num_var_fact_var,
-                                                                               radioGroupButtons(inputId = "num_var_fact_var",
-                                                                                                 label = "Choose a graph",
-                                                                                                 choices = c(`<i class="fas fa-signal"></i>` = "histogram",
-                                                                                                             `<i class="fas fa-chart-area"></i>` = "density",
-                                                                                                             `<i class="fas fa-box-open"></i>` = "box"),
-                                                                                                 justified = TRUE,
-                                                                                                 width = radioButtonWidth),
-                                                                               conditionalPanel(condition = "input.num_var_fact_var == 'histogram'",
-                                                                                                div(class = "plot-border", plotOutput(outputId = "num_var_fact_var_histogram"))),
-                                                                               conditionalPanel(condition = "input.num_var_fact_var == 'density'",
-                                                                                                div(class = "plot-border", plotOutput(outputId = "num_var_fact_var_density"))),
-                                                                               conditionalPanel(condition = "input.num_var_fact_var == 'box'",
-                                                                                                div(class = "plot-border", plotOutput(outputId = "num_var_fact_var_box"))),
-                                                              ), # Numeric & Factor
-                                                              
-                                                              #### 1.4.2.4 Factor ----
-                                                              conditionalPanel(condition = fact_var,
-                                                                               radioGroupButtons(inputId = "only_fact_var",
-                                                                                                 label = "Choose a graph",
-                                                                                                 choices = c(`<i class="fas fa-chart-bar"></i>` = "bar",
-                                                                                                             `<i class="fas fa-chart-pie"></i>` = "pie"),
-                                                                                                 justified = TRUE,
-                                                                                                 width = radioButtonWidth),
-                                                                               conditionalPanel(condition = "input.only_fact_var == 'bar'",
-                                                                                                div(class = "plot-border", plotOutput(outputId = "only_fact_var_bar"))),
-                                                                               conditionalPanel(condition = "input.only_fact_var == 'pie'",
-                                                                                                div(class = "plot-border", plotOutput(outputId = "only_fact_var_pie"))),
-                                                              ), # Factor
-                                                              
-                                                              #### 1.4.2.5 Two Numeric & Factor ----
-                                                              conditionalPanel(condition = num_var_1_num_var_2_fact_var,
-                                                                               radioGroupButtons(inputId = "two_num_var_fact_var",
-                                                                                                 label = "Choose a graph",
-                                                                                                 choices = c(`<i class="fas fa-braille"></i>` = "scatter",
-                                                                                                             `<i class="fas fa-braille"></i><span>  </span><i class="fas fa-chart-area"></i>` = "density",
-                                                                                                             `<i class="fas fa-braille"></i><span>  </span><i class="fas fa-box-open"></i>` = "box"),
-                                                                                                 justified = TRUE,
-                                                                                                 width = radioButtonWidth),
-                                                                               conditionalPanel(condition = "input.two_num_var_fact_var == 'scatter'",
-                                                                                                div(class = "plot-border", plotOutput(outputId = "two_num_var_fact_var_scatter"))),
-                                                                               conditionalPanel(condition = "input.two_num_var_fact_var == 'density'",
-                                                                                                div(class = "plot-border", plotOutput(outputId = "two_num_var_fact_var_density"))),
-                                                                               conditionalPanel(condition = "input.two_num_var_fact_var == 'box'",
-                                                                                                div(class = "plot-border", plotOutput(outputId = "two_num_var_fact_var_box"))))
-                                                              
-                                                     ), # Plot
-                                                     
-                                                     ### 1.4.3 Statistics ----
-                                                     tabPanel(title = "Statistics", 
-                                                              
-                                                              #### 1.4.3.1 One Numeric ----
-                                                              conditionalPanel(condition = num_var_one,
-                                                                               fluidRow(
-                                                                                 column(width = 12, align = "center", 
-                                                                                        div(class = "stat-border", tableOutput(outputId = "num_var_only_summary_table")))
-                                                                               )),
-                                                              #### 1.4.3.2 Two Numeric ----
-                                                              conditionalPanel(condition = num_var_1_num_var_2,
-                                                                               fluidRow(
-                                                                                 column(width = 6, align = "center",
-                                                                                        div(class = "stat-border", tableOutput(outputId = "num_var_1_summary_table"))),
-                                                                                 column(width = 6, align = "center",
-                                                                                        div(class = "stat-border", tableOutput(outputId = "num_var_2_summary_table")))
-                                                                               )),
-                                                              #### 1.4.3.3 Numeric & Factor ----
-                                                              conditionalPanel(condition = num_var_fact_var,
-                                                                               fluidRow(
-                                                                                 column(width = 6, align = "center",
-                                                                                        div(class = "stat-border", tableOutput(outputId = "num_var_summary_table"))),
-                                                                                 column(width = 6, align = "center",
-                                                                                        div(class = "stat-border", tableOutput(outputId = "fact_var_summary_table")))
-                                                                               )),
-                                                              #### 1.4.3.4 Factor ----
-                                                              conditionalPanel(condition = fact_var,
-                                                                               fluidRow(
-                                                                                 column(width = 12, align = "center",
-                                                                                        div(class = "stat-border", tableOutput(outputId = "fact_var_only_summary_table")))
-                                                                               )),
-                                                              #### 1.4.3.5 Two Numeric & Factor ----
-                                                              conditionalPanel(condition = num_var_1_num_var_2_fact_var,
-                                                                               fluidRow(
-                                                                                 column(width = 4, align = "center",
-                                                                                        div(class = "stat-border", tableOutput(outputId = "num_var_11_summary_table"))),
-                                                                                 column(width = 4, align = "center",
-                                                                                        div(class = "stat-border", tableOutput(outputId = "num_var_12_summary_table"))),
-                                                                                 column(width = 4, align = "center",
-                                                                                        div(class = "stat-border", tableOutput(outputId = "fact_var_add_summary_table")))
-                                                                               )),
-                                                     ) # Statistics
-                                                     
-                                              )
-                                              
-                                            )) # analysis
+                                                  #### 1.4.2.1 One Numeric ----
+                                                  conditionalPanel(condition = num_var_one, 
+                                                                   radioGroupButtons(inputId = "num_var_one",
+                                                                                     label = "Choose a graph",
+                                                                                     choices = c(`<i class="fas fa-signal"></i>` = "histogram",
+                                                                                                 `<i class="fas fa-chart-area"></i>` = "density",
+                                                                                                 `<i class="fas fa-box-open"></i>` = "box"),
+                                                                                     justified = TRUE,
+                                                                                     width = radioButtonWidth,
+                                                                                     checkIcon = list(yes = icon('bolt'))),
+                                                                   conditionalPanel(condition = "input.num_var_one == 'histogram'",
+                                                                                    div(class = "plot-border", plotOutput(outputId = "num_var_one_hist"))),
+                                                                   conditionalPanel(condition = "input.num_var_one == 'density'",
+                                                                                    div(class = "plot-border", plotOutput(outputId = "num_var_one_density"))),
+                                                                   conditionalPanel(condition = "input.num_var_one == 'box'",
+                                                                                    div(class = "plot-border", plotOutput(outputId = "num_var_one_box"))),
+                                                                   
+                                                  ), # One Numeric
+                                                  #### 1.4.2.2 Two Numeric ----
+                                                  conditionalPanel(condition = num_var_1_num_var_2,
+                                                                   radioGroupButtons(inputId = "num_var_two",
+                                                                                     label = "Choose a graph",
+                                                                                     choices = c(`<i class="fas fa-braille"></i>` = "scatter",
+                                                                                                 `<i class="fas fa-braille"></i><span>  </span><i class="fas fa-chart-area"></i>` = "density",
+                                                                                                 `<i class="fas fa-braille"></i><span>  </span><i class="fas fa-box-open"></i>` = "box"),
+                                                                                     justified = TRUE,
+                                                                                     width = radioButtonWidth,
+                                                                                     checkIcon = list(yes = icon('bolt'))),
+                                                                   conditionalPanel(condition = "input.num_var_two == 'scatter'",
+                                                                                    div(class = "plot-border", plotOutput(outputId = "num_var_two_scatter"))),
+                                                                   conditionalPanel(condition = "input.num_var_two == 'density'",
+                                                                                    div(class = "plot-border", plotOutput(outputId = "num_var_two_density"))),
+                                                                   conditionalPanel(condition = "input.num_var_two == 'box'",
+                                                                                    div(class = "plot-border", plotOutput(outputId = "num_var_two_box"))),
+                                                  ), # Two numeric
+                                                  
+                                                  #### 1.4.2.3 Numeric & Factor ----
+                                                  conditionalPanel(condition = num_var_fact_var,
+                                                                   radioGroupButtons(inputId = "num_var_fact_var",
+                                                                                     label = "Choose a graph",
+                                                                                     choices = c(`<i class="fas fa-signal"></i>` = "histogram",
+                                                                                                 `<i class="fas fa-chart-area"></i>` = "density",
+                                                                                                 `<i class="fas fa-box-open"></i>` = "box"),
+                                                                                     justified = TRUE,
+                                                                                     width = radioButtonWidth,
+                                                                                     checkIcon = list(yes = icon('bolt'))),
+                                                                   conditionalPanel(condition = "input.num_var_fact_var == 'histogram'",
+                                                                                    div(class = "plot-border", plotOutput(outputId = "num_var_fact_var_histogram"))),
+                                                                   conditionalPanel(condition = "input.num_var_fact_var == 'density'",
+                                                                                    div(class = "plot-border", plotOutput(outputId = "num_var_fact_var_density"))),
+                                                                   conditionalPanel(condition = "input.num_var_fact_var == 'box'",
+                                                                                    div(class = "plot-border", plotOutput(outputId = "num_var_fact_var_box"))),
+                                                  ), # Numeric & Factor
+                                                  
+                                                  #### 1.4.2.4 Factor ----
+                                                  conditionalPanel(condition = fact_var,
+                                                                   radioGroupButtons(inputId = "only_fact_var",
+                                                                                     label = "Choose a graph",
+                                                                                     choices = c(`<i class="fas fa-chart-bar"></i>` = "bar",
+                                                                                                 `<i class="fas fa-chart-pie"></i>` = "pie"),
+                                                                                     justified = TRUE,
+                                                                                     width = radioButtonWidth,
+                                                                                     checkIcon = list(yes = icon('bolt'))),
+                                                                   conditionalPanel(condition = "input.only_fact_var == 'bar'",
+                                                                                    div(class = "plot-border", plotOutput(outputId = "only_fact_var_bar"))),
+                                                                   conditionalPanel(condition = "input.only_fact_var == 'pie'",
+                                                                                    div(class = "plot-border", plotOutput(outputId = "only_fact_var_pie"))),
+                                                  ), # Factor
+                                                  
+                                                  #### 1.4.2.5 Two Numeric & Factor ----
+                                                  conditionalPanel(condition = num_var_1_num_var_2_fact_var,
+                                                                   radioGroupButtons(inputId = "two_num_var_fact_var",
+                                                                                     label = "Choose a graph",
+                                                                                     choices = c(`<i class="fas fa-braille"></i>` = "scatter",
+                                                                                                 `<i class="fas fa-braille"></i><span>  </span><i class="fas fa-chart-area"></i>` = "density",
+                                                                                                 `<i class="fas fa-braille"></i><span>  </span><i class="fas fa-box-open"></i>` = "box"),
+                                                                                     justified = TRUE,
+                                                                                     width = radioButtonWidth,
+                                                                                     checkIcon = list(yes = icon('bolt'))),
+                                                                   conditionalPanel(condition = "input.two_num_var_fact_var == 'scatter'",
+                                                                                    div(class = "plot-border", plotOutput(outputId = "two_num_var_fact_var_scatter"))),
+                                                                   conditionalPanel(condition = "input.two_num_var_fact_var == 'density'",
+                                                                                    div(class = "plot-border", plotOutput(outputId = "two_num_var_fact_var_density"))),
+                                                                   conditionalPanel(condition = "input.two_num_var_fact_var == 'box'",
+                                                                                    div(class = "plot-border", plotOutput(outputId = "two_num_var_fact_var_box"))))
+                                                  
+                                         ), # Plot
+                                         
+                                         ### 1.4.3 Statistics ----
+                                         tabPanel(title = "Statistics", 
+                                                  
+                                                  #### 1.4.3.1 One Numeric ----
+                                                  conditionalPanel(condition = num_var_one,
+                                                                   fluidRow(
+                                                                     column(width = 12, align = "center", 
+                                                                            div(class = "stat-border", tableOutput(outputId = "num_var_only_summary_table")))
+                                                                   )),
+                                                  #### 1.4.3.2 Two Numeric ----
+                                                  conditionalPanel(condition = num_var_1_num_var_2,
+                                                                   fluidRow(
+                                                                     column(width = 6, align = "center",
+                                                                            div(class = "stat-border", tableOutput(outputId = "num_var_1_summary_table"))),
+                                                                     column(width = 6, align = "center",
+                                                                            div(class = "stat-border", tableOutput(outputId = "num_var_2_summary_table")))
+                                                                   )),
+                                                  #### 1.4.3.3 Numeric & Factor ----
+                                                  conditionalPanel(condition = num_var_fact_var,
+                                                                   fluidRow(
+                                                                     column(width = 6, align = "center",
+                                                                            div(class = "stat-border", tableOutput(outputId = "num_var_summary_table"))),
+                                                                     column(width = 6, align = "center",
+                                                                            div(class = "stat-border", tableOutput(outputId = "fact_var_summary_table")))
+                                                                   )),
+                                                  #### 1.4.3.4 Factor ----
+                                                  conditionalPanel(condition = fact_var,
+                                                                   fluidRow(
+                                                                     column(width = 12, align = "center",
+                                                                            div(class = "stat-border", tableOutput(outputId = "fact_var_only_summary_table")))
+                                                                   )),
+                                                  #### 1.4.3.5 Two Numeric & Factor ----
+                                                  conditionalPanel(condition = num_var_1_num_var_2_fact_var,
+                                                                   fluidRow(
+                                                                     column(width = 4, align = "center",
+                                                                            div(class = "stat-border", tableOutput(outputId = "num_var_11_summary_table"))),
+                                                                     column(width = 4, align = "center",
+                                                                            div(class = "stat-border", tableOutput(outputId = "num_var_12_summary_table"))),
+                                                                     column(width = 4, align = "center",
+                                                                            div(class = "stat-border", tableOutput(outputId = "fact_var_add_summary_table")))
+                                                                   )),
+                                         ) # Statistics
+                                         
+                                  )
+                                  
+                                )), # analysis
+                        
+                        ## 1.7 Hypothesis testing ----
+                        
+                        ### 1.7.1 Normality test ----
+                        tabItem(tabName = "normality-test",
+                                h2("NORMAL DISTRIBUTION", style = test_header),
+                                box(width = 3, "Tlele bo teorija"),
+                                box(width = 4, 
+                                    div(class = "center-select-3",
+                                        selectInput(inputId = "normality_var",
+                                                    label = "Variable",
+                                                    choices = c(not_sel))),
+                                    actionButton(inputId = "normality_compute",
+                                                 label = "Test!",
+                                                 icon = icon("calculator"),
+                                                 width = buttonWidth),
+                                    conditionalPanel(condition = "input.normality_compute != 0",
+                                                     h4("Shapiro-Wilk test"),
+                                                     verbatimTextOutput(outputId = "normality_sw_test"),
+                                                     h4("Kolmogorov-Smirnov test"),
+                                                     verbatimTextOutput(outputId = "normality_ks_test"))),
+                                conditionalPanel(condition = "input.normality_compute != 0", box(width = 5, 
+                                    radioGroupButtons(inputId = "normality_plot", 
+                                                      label = "Choose a graph",
+                                                      choices = c(`<i class="fas fa-signal"></i>` = "histogram",
+                                                                  `<i class="fas fa-braille"></i>` = "qqplot"),
+                                                      justified = TRUE,
+                                                      width = radioButtonWidth,
+                                                      checkIcon = list(yes = icon('bolt'))),
+                                    conditionalPanel(condition = "input.normality_plot == 'histogram'",
+                                                     plotOutput(outputId = "normality_hist")),
+                                    conditionalPanel(condition = "input.normality_plot == 'qqplot'",
+                                                     plotOutput(outputId = "normality_qqplot"))
                                     
-                                  ) # tabItems
+                                ))
+                                ), # Normality - test
+                        
+                        ### 1.7.2 T - Test ----
+                        
+                        tabItem(tabName = "t-test",
+                                h2("T-TEST", style = test_header),
+                                box(width = 3, "Tlele bo teorija"),
+                                # Selectors
+                                box(width = 4,  #title = "Selectors", solidHeader = TRUE,
+                                    radioGroupButtons(inputId = "t_test_type",
+                                                      label = "Type of t-test",
+                                                      choices = c("One Sample." = "one.sample", "Two Sample" = "two.sample"),
+                                                      #justified = TRUE,
+                                                      individual = TRUE,
+                                                      checkIcon = list(yes = icon('bolt'))),
+                                    conditionalPanel(condition = "input.t_test_type == 'one.sample'",
+                                                     div(class = "center-select-3",
+                                                         selectInput(inputId = "one_sample_t_var",
+                                                                     label = "Variable",
+                                                                     choices = c(not_sel)))),
+                                    conditionalPanel(condition = "input.t_test_type == 'two.sample'",
+                                                     fluidRow(
+                                                       column(width = 6, selectInput(inputId = "two_sample_t_var_one",
+                                                                   label = "Variable One",
+                                                                   choices = c(not_sel))),
+                                                       column(width = 6, selectInput(inputId = "two_sample_t_var_two",
+                                                                   label = "Variable Two",
+                                                                   choices = c(not_sel)))
+                                                     )),
+                                    radioGroupButtons(inputId = "t_test_alternative",
+                                                      label = "Alternative",
+                                                      choices = c("Two Sided" = "two.sided", "Less" = "less", "Greater" = "greater"),
+                                                      individual = TRUE,
+                                                      #justified = TRUE,
+                                                      size = "normal",
+                                                      checkIcon = list(yes = icon('bolt'))),
+                                    conditionalPanel(condition = "input.t_test_type == 'two.sample'",
+                                                     fluidRow(
+                                                       column(width = 6, prettyCheckbox(inputId = 't_test_var',
+                                                                    label = HTML('<b>Variance Equal ?</b>'),
+                                                                    value = FALSE,
+                                                                    icon = icon("thumbs-up"),
+                                                                    plain = TRUE,
+                                                                    outline = TRUE)),
+                                                       column(width = 6, prettyCheckbox(inputId = 't_test_paired',
+                                                                    label = HTML('<b>Paired ?</b>'),
+                                                                    value = FALSE,
+                                                                    icon = icon("thumbs-up"),
+                                                                    plain = TRUE,
+                                                                    outline = TRUE))
+                                                     )),
+                                    div(class = "center-select-4",
+                                        numericInput(inputId = "t_test_mean",
+                                                         label = "Hypothesis Mean",
+                                                         value = 0)),
+                                    actionButton(inputId = "t_test_compute",
+                                                 label = "Test!",
+                                                 icon = icon("calculator"),
+                                                 width = buttonWidth)
+                                ), # Selectors 
+                                
+                                # #### Summary 
+                                conditionalPanel(condition = "input.t_test_compute != 0",
+                                                 #box(width = 4, title = "Summary", solidHeader = TRUE,
+                                                     verbatimTextOutput(outputId = "t_test_summary")) # Summary
+                                
+                                ), # T - Test
+                        
+                        ## 1.8 Download Data ----
+                        tabItem(tabName = "data_download",
+                                fluidRow(
+                                  box(width = 5, title = "Download Handler", solidHeader = TRUE,
+                                      div(class = "center-select-4",
+                                          textInputAddon(inputId = "download_name",
+                                                         label = "File Name",
+                                                         value = "",
+                                                         placeholder = "Download File Name",
+                                                         addon = icon("file-signature"))),
+                                      div(class = "center-select-5",
+                                          radioGroupButtons(inputId = "download_type",
+                                                            label = "Type Of File",
+                                                            choices = c("csv", "xlsx", "txt"),
+                                                            individual = TRUE,
+                                                            #justified = TRUE,
+                                                            size = "normal",
+                                                            checkIcon = list(yes = icon('bolt')))),
+                                      div(class = "center-select-5",
+                                          conditionalPanel(condition = "input.download_type == 'csv'",
+                                                           radioGroupButtons(inputId = "download_sep_csv",
+                                                                             label = "Separator & Decimal",
+                                                                             choices = c("Comma & Period" = ",", "Semicolon & Comma" = ";"),
+                                                                             individual = TRUE,
+                                                                             # justified = TRUE,
+                                                                             size = "normal",
+                                                                             checkIcon = list(yes = icon('bolt')))),
+                                          conditionalPanel(condition = "input.download_type == 'txt'",
+                                                           radioGroupButtons(inputId = "download_sep_txt",
+                                                                             label = "Separator",
+                                                                             choices = c("Comma" = ",", "Semicolon" = ";", "Pipe" = "|", "Tab" = "\t"),
+                                                                             individual = TRUE,
+                                                                             checkIcon = list(yes = icon('bolt')))), # Conditional panel
+                                          ), # div
+                                      prettyCheckbox(inputId = 'download_header',
+                                                     label =  HTML('<b>Header ?</b>'),
+                                                     value = TRUE,
+                                                     icon = icon("thumbs-up"),
+                                                     plain = TRUE,
+                                                     outline = TRUE),
+                                      
+                                      downloadButton(outputId = "download_data",
+                                                     label = "Download",
+                                                     icon = icon("file-export"))
+                                  ), # side bar
+                                )) # Data Download
+                        
+                      ) # tabItems
                     ) # Body
                     
 ) # ui
@@ -380,7 +572,14 @@ server <- function(input, output, session){
   
   observeEvent(input$csv_input, {
     req(input$csv_input)
-    data <- fread(input$csv_input$datapath)
+    if(input$input_type == "csv"){
+      if(input$input_sep_csv == ","){data <- read.csv(input$csv_input$datapath, header = input$input_header)}
+      if(input$input_sep_csv == ";"){data <- read.csv2(input$csv_input$datapath, header = input$input_header)}}
+    if(input$input_type == "xlsx"){
+      file.rename(input$csv_input$datapath, paste(input$csv_input$datapath, ".xlsx", sep = ""))
+      data <- readxl::read_excel(paste(input$csv_input$datapath, ".xlsx", sep=""), sheet=1, col_names = input$input_header)}
+    if(input$input_type == "txt"){data <- read.table(file=input$csv_input$datapath, sep=input$input_sep_txt, check.names=FALSE, header=input$input_header)}
+    
     colnames(data) <- gsub(" ", "_", colnames(data))
     globals$data_input = data
   })
@@ -468,13 +667,13 @@ server <- function(input, output, session){
   
   observeEvent(input$makenew_col, {
     data <- globals$data_input
-    num1 <- which(names(pokemon) == input$new_col_1)
-    num2 <- which(names(pokemon) == input$new_col_2)
+    num1 <- which(names(data) == input$new_col_1)
+    num2 <- which(names(data) == input$new_col_2)
     
-    if(input$new_col_operation == "plus"){data[, input$newnew_col_name] <- pokemon[, num1] + pokemon[, num2]}
-    if(input$new_col_operation == "minus"){data[, input$newnew_col_name] <- pokemon[, num1] - pokemon[, num2]}
-    if(input$new_col_operation == "times"){data[, input$newnew_col_name] <- pokemon[, num1] * pokemon[, num2]}
-    if(input$new_col_operation == "divide"){data[, input$newnew_col_name] <- pokemon[, num1] / pokemon[, num2]}
+    if(input$new_col_operation == "plus"){data[, input$newnew_col_name] <- data[, num1] + data[, num2]}
+    if(input$new_col_operation == "minus"){data[, input$newnew_col_name] <- data[, num1] - data[, num2]}
+    if(input$new_col_operation == "times"){data[, input$newnew_col_name] <- data[, num1] * data[, num2]}
+    if(input$new_col_operation == "divide"){data[, input$newnew_col_name] <- data[, num1] / data[, num2]}
     globals$data_input <- data
     
     if(input$new_col_1 != not_sel & input$new_col_2 != not_sel & input$newnew_col_name != ""){succNotification("newcol_succ")}
@@ -502,12 +701,12 @@ server <- function(input, output, session){
     }
     if(input$new_col_class != "ns" & input$change_col_class != not_sel){succNotification("collclas_succ")}
     else{errNotification("collclas_err")}
-    })
+  })
   
   observeEvent(input$reclass_col, {
     shinyjs::reset('change_col_class')
     shinyjs::reset('new_col_class')
-    })
+  })
   
   ## 2.2 Analysis ----
   
@@ -529,6 +728,13 @@ server <- function(input, output, session){
     # Make new column
     updateSelectInput(inputId = "new_col_1", choices = choices)
     updateSelectInput(inputId = "new_col_2", choices = choices)
+    
+    # T-test
+    updateSelectInput(inputId = "one_sample_t_var", choices = choices)
+    updateSelectInput(inputId = "two_sample_t_var_one", choices = choices)
+    updateSelectInput(inputId = "two_sample_t_var_two", choices = choices)
+    # Normality test
+    updateSelectInput(inputId = "normality_var", choices = choices)
   })
   
   observe({
@@ -563,6 +769,18 @@ server <- function(input, output, session){
       updateSelectInput(session, inputId = "new_col_1",
                         choices = c(not_sel, choices[!(choices %in% c(input$new_col_2))]),
                         selected = isolate(input$new_col_1))
+    }
+    
+    # T-test
+    if(!is.null(input$two_sample_t_var_one)){
+      updateSelectInput(session, inputId = "two_sample_t_var_two",
+                        choices = c(not_sel, choices[!(choices %in% c(input$two_sample_t_var_one))]),
+                        selected = isolate(input$two_sample_t_var_two))
+    }
+    if(!is.null(input$two_sample_t_var_two)){
+      updateSelectInput(session, inputId = "two_sample_t_var_one",
+                        choices = c(not_sel, choices[!(choices %in% c(input$two_sample_t_var_two))]),
+                        selected = isolate(input$two_sample_t_var_one))
     }
   })
   
@@ -693,6 +911,83 @@ server <- function(input, output, session){
   output$num_var_11_summary_table <- renderText(kablanje(numerical_stat(globals$data_input, num_var_1())))
   output$num_var_12_summary_table <- renderText(kablanje(numerical_stat(globals$data_input, num_var_2())))
   output$fact_var_add_summary_table <- renderText(kablanje(factor_stat(globals$data_input, fact_var())))
+  
+  ## 2.5 Normality test ----
+  
+  shapiro <- eventReactive(input$normality_compute, {shapiro.test(globals$data_input[[input$normality_var]])})
+  kolmogorov <- eventReactive(input$normality_compute, {ks.test(globals$data_input[[input$normality_var]], "pnorm")})
+  output$normality_sw_test <- renderPrint(shapiro())
+  output$normality_ks_test <- renderPrint(kolmogorov())
+  
+  normality_hist <- eventReactive(input$normality_compute, {
+    ggplot(data = globals$data_input, aes_string(x = input$normality_var)) +
+      geom_histogram(col = blackColor, fill = fillColor, aes(y= ..density..)) + theme1 + labs(y="Density") +
+      stat_function(fun = dnorm, args = list(mean = mean(globals$data_input[[input$normality_var]]), 
+                                             sd = sd(globals$data_input[[input$normality_var]])), col = "red", lwd = 1.2)
+    })
+  output$normality_hist <- renderPlot({normality_hist()})
+  
+  normality_qqplot <- eventReactive(input$normality_compute, {
+    ggplot(data = globals$data_input, aes_string(sample = input$normality_var)) +
+      stat_qq() + stat_qq_line(col = "red", lwd = 1.2) +  theme1 + labs(y = "Sample", x = "Theoretical")
+  })
+  
+  output$normality_qqplot <- renderPlot({normality_qqplot()})
+  
+  ## 2.6 T - Test ----
+  
+  t_test_summary <- eventReactive(input$t_test_compute, {
+    data <- globals$data_input
+    if(input$t_test_type == "one.sample"){
+      num <- which(names(data) == input$one_sample_t_var)
+      variable <- data[,num]
+      test <- t.test(x = variable, y = NULL, alternative = input$t_test_alternative, mu = input$t_test_mean,
+                     paired = FALSE, var.equal = FALSE, conf.level = 0.95)
+      
+
+    }
+    if(input$t_test_type == "two.sample"){
+      num1 <- which(names(data) == input$two_sample_t_var_one)
+      num2 <- which(names(data) == input$two_sample_t_var_two)
+      Variable_One <- data[,num1]
+      Variable_Two <- data[,num2]
+      test <- t.test(x = Variable_One, y = Variable_Two, alternative = input$t_test_alternative, mu = input$t_test_mean,
+                     paired = input$t_test_paired, var.equal = input$t_test_var, conf.level = 0.95)
+    }
+    test
+  })
+  
+  output$t_test_summary <- renderPrint(t_test_summary())
+  
+  observeEvent(input$t_test_compute, {
+    # Da človk vid kaj primerja ...
+    # shinyjs::reset('one_sample_t_var')
+    # shinyjs::reset('two_sample_t_var_one')
+    # shinyjs::reset('two_sample_t_var_two')
+    
+    #shinyjs::reset('t_test_paired')
+    #shinyjs::reset('t_test_var')
+    
+    #updateNumericInputIcon(session, inputId = "t_test_mean", value = 0)
+    #updateRadioGroupButtons(session, inputId = "t_test_alternative", selected = "two.sided")
+    #updateRadioGroupButtons(session, inputId = "t_test_type", selected = "one.sample")
+  })
+  
+  
+  ## 2.7 Download Data ----
+  
+  output$download_data <- downloadHandler(
+    filename = function(){paste(input$download_name, input$download_type, sep = ".")},
+    content = function(file){
+      
+      if(input$download_type == "csv"){
+        if(input$download_sep_csv == ","){write.csv(globals$data_input, file)}
+        if(input$download_sep_csv == ";"){write.csv2(globals$data_input, file)}
+        }
+      if(input$download_type == "xlsx"){writexl::write_xlsx(globals$data_input, file)}
+      if(input$download_type == "txt"){write.table(globals$data_input, file, row.names = FALSE, sep = input$download_sep_txt, quote = FALSE)}
+    }
+  )
   
 } # Server
 

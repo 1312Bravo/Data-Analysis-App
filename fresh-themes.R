@@ -3,9 +3,9 @@ blackColor <- "#111111"
 whiteColor <- "#ffffff"
 fillColor <- "#787878"
 borderRadius <- "5px"
-buttonWidth <- "130px"
-selectBarWidth <- "200px"
-radioButtonWidth3 <- "250px"
+buttonWidth <- "150px"
+selectBarWidth <- "100%"#"200px"
+radioButtonWidth <- "100%" # "250px"
 
 durNotify <- 5
 errorNotify <- "Error! Something went wrong. Try again and take more care."
@@ -60,6 +60,8 @@ num_var_2_fact_var <- "(input.num_var_1 == 'Not Selected' && input.num_var_2 != 
 num_var_fact_var <- "(input.num_var_1 != 'Not Selected' && input.num_var_2 == 'Not Selected' && input.fact_var != 'Not Selected') || (input.num_var_1 == 'Not Selected' && input.num_var_2 != 'Not Selected' && input.fact_var != 'Not Selected')"
 num_var_1_num_var_2_fact_var <- "(input.num_var_1 != 'Not Selected' && input.num_var_2 != 'Not Selected' && input.fact_var != 'Not Selected')"
 no_var <- "(input.num_var_1 == 'Not Selected' && input.num_var_2 == 'Not Selected' && input.fact_var == 'Not Selected')"  
+
+test_header <- "text-align: center; color: #111; margin-top: -8px;"
   
 
   
